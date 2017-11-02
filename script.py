@@ -18,7 +18,6 @@ By default, the destination file is 'tcpoutput.pcap' in the '/tmp/' directory.
 
               --------------Current configuration-------------
 """
-
   print " Source File Path: ", tcpinput[0]
   print "  Dest. File Path: ", tcpinput[7], "\n"
   for i in range(len(tcpinput)):
