@@ -15,32 +15,54 @@ def menu_text():
   print "By default, the source file path is the 'packets-master/' directory within the current user's home directory."
   print "By default, the destination file is 'tcpoutput.pcap' in the '/tmp/' directory."
   
-  print"              --------------Current configuration-------------"
-  print " Source File Path: ", tcpinput[0]
+  print"               --------------Current configuration-------------"
+  print "      Source Path: ", tcpinput[0]
   print "  Dest. File Path: ", tcpinput[7], "\n"
   for i in range(len(tcpinput)):
     if not tcpinput[i] == 'NULL':
       if i == 1:
-        
-        print "    Specific IP/Network: ", tcpinput[1]
+        if "/" in str(tcpinput[1]):
+          print "       Specific Network: ", tcpinput[1]
+        else:
+          print "            Specific IP: ", tcpinput[1]
       elif not i == 1:
         if i == 2:
-          print "      Source IP/Network: ", tcpinput[2]
+          if "/" in str(tcpinput[2]):
+            print "         Source Network: ", tcpinput[2]
+          else:
+            print "              Source IP: ", tcpinput[2]
         if i == 3:
-          print " Destination IP/Network: ", tcpinput[3]
+          if "/" in str(tcpinput[3]):
+            print "    Destination Network: ", tcpinput[3]
+          else:
+            print "         Destination IP: ", tcpinput[3]
       if i == 4:
-        
-        print "\n    Specific Port/Range: ", tcpinput[4]
+        if "-" in str(tcpinput[4]):
+          print "\n    Specific Port Range: ", tcpinput[4]
+        else:
+          print "\n          Specific Port: ", tcpinput[4]
       elif not i == 4:
         if i == 5:
-          print "\n      Source Port/Range: ", tcpinput[5]
-        if i == 6:
-          print " Destination Port/Range: ", tcpinput[6]
-  print "              ------------------------------------------------"
+          if "-" in str(tcpinput[5]):
+            print "\n      Source Port Range: ", tcpinput[5]
+          else:
+            print "\n            Source Port: ", tcpinput[5]
+        if i == 6 and tcpinput[5] == 'NULL':
+          if "-" in str(tcpinput[6]):
+            print "\n Destination Port Range: ", tcpinput[6]
+          else:
+            print "\n       Destination Port: ", tcpinput[6]
+        elif i == 6:
+          if "-" in str(tcpinput[6]):
+            print " Destination Port Range: ", tcpinput[6]
+          else:
+            print "       Destination Port: ", tcpinput[6]
 
-  print "If a specific IP or port is made, source/destination IPs/ports will be nulled."
+  print "               ------------------------------------------------"
 
-  print "NOTE: Put 'C' infront of the option you want to NULL out."
+  print "If a specific IP or port is made, source/destination IPs/ports will be NULL'ed."
+
+  print "NOTE: Put 'C' alone will NULL out all data."
   print "          (Reverts directories back to default)"
 
   print "Please choose from the following options:"
@@ -48,8 +70,9 @@ def menu_text():
   print "        2) Source IP/Network                5) Source Port/Range"
   print "        3) Destination IP/Network           6) Destination Port/Range\n"
     
-  print "        7) Source File                      8) Destination File\n"
-    
+  print "        7) Source Directory                 8) Destination File\n"
+  
+  print "       #C) Clears a specific entry."  
   print "        E) Execute tcpdump with current configuration"
   print "        Q) Quit script"
 
@@ -89,7 +112,7 @@ def validate_ip(ip_addr):
 
 def port_func(s):
   while True:
-      print "\nIf at anytime you want to leave, just enter 'M'\n\nPlease input a valid port number."
+      print "\nIf at anytime you want to leave, just enter 'M'\n\nPort ranges are indicated by entering the first port number, a '-' and a second port number.\nPlease input a valid port number or range."
       if s == "4":
         user = raw_input("Specific Port = ")
       elif s == "5":
@@ -99,22 +122,46 @@ def port_func(s):
       if user.lower() == "m":
         break
       elif validate_port(user) is False:
-        print "\nERROR: INVALID INPUT\nPlease input a valid port number.\n\n"
+        print "\n\\\\ERROR: INVALID INPUT - Please enter a valid Port number or range - ERROR: INVALID INPUT//\n\n"
       elif validate_port(user) is True:
-        if s == "4":
-          tcpinput[4] = user
-          tcpinput[5] = tcpinput[6] = 'NULL'
-        elif s == "5":
-          tcpinput[5] = user
-          tcpinput[4] = 'NULL'
-        elif s == "6":
-          tcpinput[6] = user
-          tcpinput[4] = 'NULL'
+        port1 = port2 = 0
+        if "-" in user:
+          port1, port2 = user.split("-")
+        if int(port1) > int(port2):
+          if s == "4":
+            tcpinput[4] = str(port2) + "-" + str(port1)
+            tcpinput[5] = tcpinput[6] = 'NULL'
+          elif s == "5":
+            tcpinput[5] = str(port2) + "-" + str(port1)
+            tcpinput[4] = 'NULL'
+          elif s == "6":
+            tcpinput[6] = str(port2) + "-" + str(port1)
+            tcpinput[4] = 'NULL'
+        elif ("-" in user and int(port1) < int(port2)) or not "-" in user:
+          if s == "4":
+            tcpinput[4] = str(user)
+            tcpinput[5] = tcpinput[6] = 'NULL'
+          elif s == "5":
+            tcpinput[5] = str(user)
+            tcpinput[4] = 'NULL'
+          elif s == "6":
+            tcpinput[6] = str(user)
+            tcpinput[4] = 'NULL'
         break
       else:
-        print "\nERROR: INVALID INPUT\nPlease input a valid Port number.\n\n"
+        print "\n\\\\ERROR: INVALID INPUT - Please enter a valid Port number or range - ERROR: INVALID INPUT//\n\n"
 def validate_port(port):
-  if not port.isdigit():
+  if "." in port:
+    return False
+  if "-" in port:
+    port1, port2 = port.split("-")
+    if not (port1.isdigit() and port2.isdigit()):
+      return False
+    elif (int(port1) < 0 or int(port1) > 65535) and (int(port2) < 0 or int(port2) > 65535):
+      return False
+    else:
+     return True
+  elif not port.isdigit():
       return False
   elif int(port) < 0 or int(port) > 65535:
     return False
@@ -126,48 +173,66 @@ def main():
     print banner
     menu_text()
     user = raw_input(">>>")
-    if len(user) > 2:
-      print "\nERROR: INVALID INPUT\nPlease input a valid option."
-    elif list(user)[0] in ["1", "2", "3"]: # IP options
-      if len(user) == 2:
-        if list(user)[1].lower() == "c": # Clear specified IP option
-          tcpinput[int(list(user)[0])] = 'NULL'
-      else:  
-        ip_func(user)
-    elif list(user)[0] in ["4", "5", "6"]: # Port options
-      if len(user) == 2:
-        if list(user)[1].lower() == "c": # Clear specified port option
-          tcpinput[int(list(user)[0])] = 'NULL'
-      else:  
-        port_func(user)
+    if 0 < len(user) <= 2:
+      if list(user)[0] in ["1", "2", "3"]: # IP options
+        if len(user) == 2:
+          if list(user)[1].lower() == "c": # Clear specified IP option
+            tcpinput[int(list(user)[0])] = 'NULL'
+        else:  
+          ip_func(user)
+      elif list(user)[0] in ["4", "5", "6"]: # Port options
+        if len(user) == 2:
+          if list(user)[1].lower() == "c": # Clear specified port option
+            tcpinput[int(list(user)[0])] = 'NULL'
+        else:  
+          port_func(user)
+        
       
-    #elif user == "7":
-      
-      
-    elif user.lower() == "e":
-      tcpd_com = "for i in `find " + str(tcpinput[0]) + " -type f` ; do tcpdump -n -r $i" 
-      for i in range(len(tcpinput)): # Checks each entry in tcpinput
-        if not (i == 0 or i == 7) and not tcpinput[i] == 'NULL': # Skips NULL data
-          if i == 2:
-              tcpd_com += " src"
-          if i == 3:
-            tcpd_com += " dst"
-          if not (i == 0 or i == 7) and list(str(IP(tcpinput[i], make_net=True))).count("/") == 1: # Network entry checker
-            tcpd_com += " net " + str(tcpinput[i])
-          elif i in range(1, 4):
-            tcpd_com += " host " + str(tcpinput[i])
-
-          if i == 4:
-            tcpd_com += " port " + str(tcpinput[4])
-          elif not i == 2:
+        
+      elif str(list(user)[0]).lower() == "c": # Clears all fields
+        while True:
+          print "\nAre you sure you want to clear all fields? This is irreversable. [Y/N]"
+          user = raw_input(">>>")
+          if list(user)[0].lower() == "y":
+            tcpinput[0] = '/home/' + current_user + '/packets-master/'
+            tcpinput[7] = '/tmp/tcpoutput.pcap'
+            for i in range(len(tcpinput)):
+              if 0 < i < 7:
+                tcpinput[i] = 'NULL'
+            break
+          elif list(user)[0].lower() == "n":
+            break
+          else:
+            print "\nERROR: INVALID INPUT\nPlease only enter [Y/N]."
+      elif str(list(user)[0]).lower() == "e": # Executes command with current fields
+        tcpd_com = "for i in `find " + str(tcpinput[0]) + " -type f` ; do tcpdump -n -r $i" 
+        for i in range(len(tcpinput)): # Checks each entry in tcpinput
+          if not (i == 0 or i == 7) and not tcpinput[i] == 'NULL': # Skips NULL data
+            # IP Data
+            if i == 2:
+                tcpd_com += " src"
+            if i == 3:
+              tcpd_com += " dst"
+            if not (i == 0 or i == 7) and "/" in list(str(IP(tcpinput[i], make_net=True))): # Network entry checker
+              tcpd_com += " net " + str(tcpinput[i])
+            elif i in range(1, 4):
+              tcpd_com += " host " + str(tcpinput[i])
+            # Port Data
             if i == 5:
-              tcpd_com += " src port " + str(tcpinput[5])
+                tcpd_com += " src"
             if i == 6:
-              tcpd_com += " dst port " + str(tcpinput[6])
-      tcpd_com += " -w /tmp/$i'.tmpdump'; done && mergecap  -w " + str(tcpinput[7]) + " /tmp/*.tmpdump && find -type f -name /tmp/'*tmpdump*' -delete"
-      print tcpd_com
-    elif user.lower() == "q":
-      break
+                tcpd_com += " dst"
+            if not (i == 0 or i == 7) and "-" in list(str(tcpinput[i])) and i in range(4, 7):
+              tcpd_com += " portrange " +str(tcpinput[i])
+            elif i in range(4, 7):
+              tcpd_com += " port " + str(tcpinput[i])
+              
+        tcpd_com += " -w /tmp/$i'.tmpdump'; done && mergecap  -w " + str(tcpinput[7]) + " /tmp/*.tmpdump && find -type f -name /tmp/'*tmpdump*' -delete"
+        print tcpd_com
+      elif list(user)[0].lower() == "q":
+        break
+      else:
+        print "\nERROR: INVALID INPUT\nPlease enter a valid option."
     else:
-      print "\nERROR: INVALID INPUT\nPlease input a valid option."
+      print "\nERROR: INVALID INPUT\nPlease enter a valid option."
 main()
