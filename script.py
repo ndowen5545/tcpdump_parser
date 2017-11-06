@@ -15,7 +15,7 @@ def menu_text():
   print "By default, the source file path is the 'packets-master/' directory within the current user's home directory."
   print "By default, the destination file is 'tcpoutput.pcap' in the '/tmp/' directory."
   
-  print"               --------------Current configuration-------------"
+  print"              --------------Current configuration-------------"
   print "      Source Path: ", tcpinput[0]
   print "  Dest. File Path: ", tcpinput[7], "\n"
   for i in range(len(tcpinput)):
@@ -58,7 +58,7 @@ def menu_text():
           else:
             print "       Destination Port: ", tcpinput[6]
 
-  print "               ------------------------------------------------"
+  print "              ------------------------------------------------"
 
   print "If a specific IP or port is made, source/destination IPs/ports will be NULL'ed."
 
@@ -78,7 +78,7 @@ def menu_text():
 
 def ip_func(s):
     while True:
-      print "\nIf at anytime you want to leave, just enter 'M'\n\nCIDR and subnet mask are indicated with '/'.\nRange is indicated with first IP and second IP being seperated with '-'\n\nPlease put a valid IP address or IP range."
+      print "\nIf at anytime you want to leave, just enter 'M'\n\nCIDR and subnet mask are indicated with '/'.\nRange is indicated with first IP and second IP being seperated with '-'\n\nPlease enter a valid IP address or IP range."
       if s == "1":
         user = raw_input("Specific IP/Network = ")
       elif s == "2":
@@ -88,7 +88,7 @@ def ip_func(s):
       if user.lower() == "m":
         break
       elif validate_ip(user) is False:
-        print "\nERROR: INVALID INPUT\nPlease input a valid IP address, network range, or subnet/CIDR.\n\n"
+        print "\n\\\\ERROR: INVALID INPUT - Please enter a valid IP addres or network - ERROR: INVALID INPUT//\n\n"
       elif validate_ip(user) is True:
         if list(user).count("/") == 1 or list(user).count("-") == 1:
           tcpinput[int(s)] = IP(user, make_net=True)
@@ -100,7 +100,7 @@ def ip_func(s):
           tcpinput[1] = 'NULL'
         break
       else:
-        print "\nERROR: INVALID INPUT\nPlease input a valid IP address, network range, or subnet/CIDR.\n\n"
+        print "\n\\\\ERROR: INVALID INPUT - Please enter a valid IP addres or network - ERROR: INVALID INPUT//\n\n"
 def validate_ip(ip_addr):
   try:
     if IP(ip_addr):
@@ -108,7 +108,6 @@ def validate_ip(ip_addr):
   except:
     if IP(ip_addr, make_net=True):
       return True
-
 
 def port_func(s):
   while True:
@@ -187,8 +186,18 @@ def main():
         else:  
           port_func(user)
         
-      
-        
+        """elif user == "7":
+          while True:
+            print "\nPlease input a valid directory path.\n\nPath MUST be absolute.\n"
+            user = raw_input("Source Directory Path = ")
+            try:
+              if TEST DIRECTORY:
+                tcpinput[0] = user
+                break
+            except:
+              print "\n\\\\ERROR: INVALID INPUT - Please enter a valid directory - ERROR: INVALID INPUT//\n\n"
+              """
+            
       elif str(list(user)[0]).lower() == "c": # Clears all fields
         while True:
           print "\nAre you sure you want to clear all fields? This is irreversable. [Y/N]"
@@ -232,7 +241,7 @@ def main():
       elif list(user)[0].lower() == "q":
         break
       else:
-        print "\nERROR: INVALID INPUT\nPlease enter a valid option."
+        print "\n\\\\ERROR: INVALID INPUT - Please enter a valid option - ERROR: INVALID INPUT//\n\n"
     else:
-      print "\nERROR: INVALID INPUT\nPlease enter a valid option."
+      print "\n\\\\ERROR: INVALID INPUT - Please enter a valid option - ERROR: INVALID INPUT//\n\n"
 main()
