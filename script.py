@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from IPy import IP
-import getpass, time
+import getpass, time, os
 
 current_user = getpass.getuser()
 tcpinput = ['/home/' + current_user + '/packets-master/', 'NULL', 'NULL', 'NULL', 'NULL', 'NULL', 'NULL', '/tmp/tcpoutput.pcap']
@@ -85,7 +85,7 @@ def ip_func(s):
         user = raw_input("Source IP/Network = ")
       elif s == "3":
         user = raw_input("Destination IP/Network = ")
-      if user.lower() == "m":
+      if list(user)[0].lower() == "m":
         break
       elif validate_ip(user) is False:
         print "\n\\\\ERROR: INVALID INPUT - Please enter a valid IP addres or network - ERROR: INVALID INPUT//\n\n"
@@ -174,30 +174,46 @@ def main():
     user = raw_input(">>>")
     if 0 < len(user) <= 2:
       if list(user)[0] in ["1", "2", "3"]: # IP options
-        if len(user) == 2:
-          if list(user)[1].lower() == "c": # Clear specified IP option
-            tcpinput[int(list(user)[0])] = 'NULL'
-        else:  
+        if len(user) == 2 and list(user)[1].lower() == "c": # Clear specified IP option
+          tcpinput[int(list(user)[0])] = 'NULL'
+        elif user in ["1", "2", "3"]:  
           ip_func(user)
+        else:
+          print "\n\\\\ERROR: INVALID INPUT - Please enter a valid option - ERROR: INVALID INPUT//\n\n"
       elif list(user)[0] in ["4", "5", "6"]: # Port options
-        if len(user) == 2:
-          if list(user)[1].lower() == "c": # Clear specified port option
-            tcpinput[int(list(user)[0])] = 'NULL'
-        else:  
+        if len(user) == 2 and list(user)[1].lower() == "c": # Clear specified port option
+          tcpinput[int(list(user)[0])] = 'NULL'
+        elif user in ["1", "2", "3"]:  
           port_func(user)
+        else:
+          print "\n\\\\ERROR: INVALID INPUT - Please enter a valid option - ERROR: INVALID INPUT//\n\n"
         
-        """elif user == "7":
-          while True:
-            print "\nPlease input a valid directory path.\n\nPath MUST be absolute.\n"
-            user = raw_input("Source Directory Path = ")
-            try:
-              if TEST DIRECTORY:
-                tcpinput[0] = user
-                break
-            except:
-              print "\n\\\\ERROR: INVALID INPUT - Please enter a valid directory - ERROR: INVALID INPUT//\n\n"
-              """
-            
+      elif user == "7":
+        while True:
+          print "\nIf at anytime you want to leave, just enter 'M'\n\nPlease enter a valid absolute directory path for the source directory.\n"
+          user = raw_input("Source Directory Path = ")
+          if list(user)[0].lower() == "m":
+            break
+          elif os.path.exists(user):
+            tcpinput[0] = user
+            break
+          else:
+            print "\n\\\\ERROR: INVALID INPUT - Please enter a valid absolute directory path - ERROR: INVALID INPUT//\n\n"
+      elif user == "8":
+        while True:
+          print "\nIf at anytime you want to leave, just enter 'M'\n\nPlease enter a valid absolute directory path for the destination directory and filename.\nIf the directory does not exist, the script will create directory path."
+          user = raw_input("Destination Directory Path & Filename = ")
+          if list(user)[0].lower() == "m":
+            break
+          elif os.path.exists(user):
+            tcpinput[7] = user
+            break
+          elif not os.path.isdir(user):
+            tcpinput[7] = user
+            break
+          else:
+            print "\n\\\\ERROR: INVALID INPUT - Please enter a valid absolute directory path - ERROR: INVALID INPUT//\n\n"
+          
       elif str(list(user)[0]).lower() == "c": # Clears all fields
         while True:
           print "\nAre you sure you want to clear all fields? This is irreversable. [Y/N]"
@@ -212,7 +228,7 @@ def main():
           elif list(user)[0].lower() == "n":
             break
           else:
-            print "\nERROR: INVALID INPUT\nPlease only enter [Y/N]."
+            print "\n\\\\ERROR: INVALID INPUT - Please only enter [Y/N] - ERROR: INVALID INPUT//\n"
       elif str(list(user)[0]).lower() == "e": # Executes command with current fields
         tcpd_com = "for i in `find " + str(tcpinput[0]) + " -type f` ; do tcpdump -n -r $i" 
         for i in range(len(tcpinput)): # Checks each entry in tcpinput
@@ -235,11 +251,12 @@ def main():
               tcpd_com += " portrange " +str(tcpinput[i])
             elif i in range(4, 7):
               tcpd_com += " port " + str(tcpinput[i])
-              
+        
         tcpd_com += " -w /tmp/$i'.tmpdump'; done && mergecap  -w " + str(tcpinput[7]) + " /tmp/*.tmpdump && find -type f -name /tmp/'*tmpdump*' -delete"
         print tcpd_com
+        exec(tcpd_com)
       elif list(user)[0].lower() == "q":
-        break
+          break
       else:
         print "\n\\\\ERROR: INVALID INPUT - Please enter a valid option - ERROR: INVALID INPUT//\n\n"
     else:
