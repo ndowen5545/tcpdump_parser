@@ -5,6 +5,8 @@ import getpass, time, os
 current_user = getpass.getuser()
 tcpinput = ['/home/' + current_user + '/packets-master/', 'NULL', 'NULL', 'NULL', 'NULL', 'NULL', 'NULL', '/tmp/tcpoutput.pcap']
 #                              sdir                       specip   sip     dip    specpt  sport   dport           dfile
+if not os.path.isdir(tcpinput[0]):
+  tcpinput[0] = "/home/" + current_user + "/"
 
 banner = "\n\n\n          ~~~~~~~~~~~~~~~~~~~~ TCPDUMP PARCER ~~~~~~~~~~~~~~~~~~~~"
 def menu_text():
@@ -188,29 +190,76 @@ def main():
         else:
           print "\n\\\\ERROR: INVALID INPUT - Please enter a valid option - ERROR: INVALID INPUT//\n\n"
         
-      elif user == "7":
+      elif user == "7": # Source path
         while True:
           print "\nIf at anytime you want to leave, just enter 'M'\n\nPlease enter a valid absolute directory path for the source directory.\n"
           user = raw_input("Source Directory Path = ")
           if list(user)[0].lower() == "m":
             break
-          elif os.path.exists(user):
+          if not user[0] == "/":
+            user = "/" + user 
+          if not user[-1:] == "/":
+            user = user + "/"
+          if os.path.exists(user):
             tcpinput[0] = user
             break
           else:
             print "\n\\\\ERROR: INVALID INPUT - Please enter a valid absolute directory path - ERROR: INVALID INPUT//\n\n"
-      elif user == "8":
+      elif user == "8": # Destination path/file
         while True:
-          print "\nIf at anytime you want to leave, just enter 'M'\n\nPlease enter a valid absolute directory path for the destination directory and filename.\nIf the directory does not exist, the script will create directory path."
+          print "\nIf at anytime you want to leave, just enter 'M'\n\nIf the directory does not exist, the script will create directory path.\n\nIf a '.pcap' file isn't specified, then 'tcpoutput.pcap' will be placed as default.\nPlease enter a valid absolute directory path for the destination directory and filename."
           user = raw_input("Destination Directory Path & Filename = ")
           if list(user)[0].lower() == "m":
             break
-          elif os.path.exists(user):
-            tcpinput[7] = user
-            break
-          elif not os.path.isdir(user):
-            tcpinput[7] = user
-            break
+          if user[-5:] == ".pcap":
+            temp = user.rsplit("/", 1)
+            temp[0] += "/"
+          if not user[0] == "/":
+            user = "/" + user 
+          if not user[-1:] == "/" and not user[-5:] == ".pcap":
+            user = user + "/"
+          if os.path.isdir(user) or (user[-5:] == ".pcap" and os.path.isdir(temp[0])): # Checks if path exists
+            if os.path.isfile(user):
+              print "\nThis file already exists!\n\nOverwrite? [Y/N]"
+              x = raw_input(">>>")
+              if x[0].lower() == "y":
+                if user[-5:] == ".pcap":
+                  tcpinput[7] = user
+                else:
+                  tcpinput[7] = user + "tcpoutput.pcap" #Since no .pcap was placed, adds 'tcpoutput.pcap' as file
+                break
+              elif x[0].lower() == "n":
+                print"\nWould you like to enter another directory? [Y/N]"
+                x = raw_input(">>>")
+                if x[0].lower() == "y":
+                  continue
+                elif x[0].lower() == "n":
+                  break
+                
+          elif not os.path.isdir(user): # Checks if path is valid
+            print"\nThis directory does not exist:\n" 
+            if user[-5:] == ".pcap":
+              print temp[0]
+            else:
+              print user
+            print "\nWhen executed, do you want to create this directory/file? [Y/N]"
+            x = raw_input(">>>")
+            if x[0].lower() == "y":
+              tcpinput[7] = user
+              if not user[-5:] == ".pcap":
+                tcpinput[7] += "tcpoutput.pcap" #Since no .pcap was placed, adds 'tcpoutput.pcap' as file
+              break
+            elif x[0].lower() == "n":
+              print"\nWould you like to enter another directory? [Y/N]"
+              x = raw_input(">>>")
+              if x[0].lower() == "y":
+                continue
+              elif x[0].lower() == "n":
+                break
+              else:
+                print "\n\\\\ERROR: INVALID INPUT - Please enter only Y/N - ERROR: INVALID INPUT//\n\n"
+            else:
+              print "\n\\\\ERROR: INVALID INPUT - Please enter only Y/N - ERROR: INVALID INPUT//\n\n"
           else:
             print "\n\\\\ERROR: INVALID INPUT - Please enter a valid absolute directory path - ERROR: INVALID INPUT//\n\n"
           
@@ -219,8 +268,11 @@ def main():
           print "\nAre you sure you want to clear all fields? This is irreversable. [Y/N]"
           user = raw_input(">>>")
           if list(user)[0].lower() == "y":
-            tcpinput[0] = '/home/' + current_user + '/packets-master/'
-            tcpinput[7] = '/tmp/tcpoutput.pcap'
+            if not os.path.isdir("/home/" + current_user + "/packets-master/"):
+              tcpinput[0] = "/home/" + current_user + "/"
+            else:
+              tcpinput[0] = "/home/" + current_user + "/packets-master/"
+            tcpinput[7] = "/tmp/tcpoutput.pcap"
             for i in range(len(tcpinput)):
               if 0 < i < 7:
                 tcpinput[i] = 'NULL'
@@ -254,8 +306,11 @@ def main():
         
         tcpd_com += " -w /tmp/$i'.tmpdump'; done && mergecap  -w " + str(tcpinput[7]) + " /tmp/*.tmpdump && find -type f -name /tmp/'*tmpdump*' -delete"
         print tcpd_com
-        exec(tcpd_com)
-      elif list(user)[0].lower() == "q":
+        try:
+          exec(tcpd_com)
+        except:
+          print "\n\\\\ERROR: IO ERROR - Command did not execute properly - ERROR: IO ERROR//\n\n"
+      elif list(user)[0].lower() == "q": # Quits code
           break
       else:
         print "\n\\\\ERROR: INVALID INPUT - Please enter a valid option - ERROR: INVALID INPUT//\n\n"
